@@ -133,7 +133,7 @@ class ServerFactory {
 			));
 
 			if ($this->userSession->isLoggedIn()) {
-				$server->addPlugin(new TagsPlugin($objectTree, $this->tagManager, $this->userSession, $this->eventDispatcher, \OCP\Server::get(\OCP\Activity\IManager::class)));
+				$server->addPlugin(new TagsPlugin($objectTree, $this->tagManager));
 				$server->addPlugin(new SharesPlugin(
 					$objectTree,
 					$this->userSession,
