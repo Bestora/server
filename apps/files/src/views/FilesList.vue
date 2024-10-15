@@ -82,7 +82,7 @@
 						<template #icon>
 							<IconReload :size="20" />
 						</template>
-						{{ t('files', 'Reload') }}
+						{{ t('files', 'Retry') }}
 					</NcButton>
 				</template>
 				<template #icon>
