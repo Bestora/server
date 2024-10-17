@@ -131,7 +131,6 @@
 <script lang="ts">
 import type { ContentsWithRoot, INode } from '@nextcloud/files'
 import type { Upload } from '@nextcloud/upload'
-import type { AxiosError } from '@nextcloud/axios'
 import type { CancelablePromise } from 'cancelable-promise'
 import type { ComponentPublicInstance } from 'vue'
 import type { Route } from 'vue-router'
@@ -177,6 +176,7 @@ import filesListWidthMixin from '../mixins/filesListWidth.ts'
 import filesSortingMixin from '../mixins/filesSorting.ts'
 import logger from '../logger.ts'
 import DragAndDropNotice from '../components/DragAndDropNotice.vue'
+import { humanizeWebDAVError } from '../utils/davUtils.ts'
 
 const isSharingEnabled = (getCapabilities() as { files_sharing?: boolean })?.files_sharing !== undefined
 
@@ -557,22 +557,7 @@ export default defineComponent({
 				})
 			} catch (error) {
 				logger.error('Error while fetching content', { error })
-				if (error instanceof Error) {
-					const status = ('status' in error && error.status as number) || ('response' in error && (error.response as AxiosError).status) || 0
-					if ([400, 404, 405].includes(status)) {
-						this.error = t('files', 'Folder not found')
-					} else if (status === 403) {
-						this.error = t('files', 'This operation is forbidden')
-					} else if (status === 500) {
-						this.error = t('files', 'This directory is unavailable, please check the logs or contact the administrator')
-					} else if (status === 503) {
-						this.error = t('files', 'Storage is temporarily not available')
-					} else {
-						this.error = t('files', 'Unexpected error: {error}', { error: error.message })
-					}
-				} else {
-					this.error = t('files', 'Unknown error')
-				}
+				this.error = humanizeWebDAVError(error)
 			} finally {
 				this.loading = false
 			}
