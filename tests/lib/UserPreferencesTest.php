@@ -7,13 +7,13 @@ declare(strict_types=1);
  */
 namespace lib;
 
-use OC\UserPreferences;
+use OC\Config\UserPreferences;
+use OCP\Config\Exceptions\TypeConflictException;
+use OCP\Config\Exceptions\UnknownKeyException;
+use OCP\Config\IUserPreferences;
+use OCP\Config\ValueType;
 use OCP\IDBConnection;
 use OCP\Security\ICrypto;
-use OCP\UserPreferences\Exceptions\TypeConflictException;
-use OCP\UserPreferences\Exceptions\UnknownKeyException;
-use OCP\UserPreferences\IUserPreferences;
-use OCP\UserPreferences\ValueType;
 use Psr\Log\LoggerInterface;
 use Test\TestCase;
 
@@ -275,7 +275,7 @@ class UserPreferencesTest extends TestCase {
 	 * @return IUserPreferences
 	 */
 	private function generateUserPreferences(array $preLoading = []): IUserPreferences {
-		$preferences = new \OC\UserPreferences(
+		$preferences = new \OC\Config\UserPreferences(
 			$this->connection,
 			$this->logger,
 			$this->crypto,

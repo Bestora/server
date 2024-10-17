@@ -6,21 +6,22 @@ declare(strict_types=1);
  * SPDX-License-Identifier: AGPL-3.0-or-later
  */
 
-namespace OC;
+namespace OC\Config;
 
+use Generator;
 use InvalidArgumentException;
 use JsonException;
+use OCP\Config\Exceptions\IncorrectTypeException;
+use OCP\Config\Exceptions\TypeConflictException;
+use OCP\Config\Exceptions\UnknownKeyException;
+use OCP\Config\IUserPreferences;
+use OCP\Config\ValueType;
 use OCP\DB\Exception as DBException;
 use OCP\DB\IResult;
 use OCP\DB\QueryBuilder\IQueryBuilder;
 use OCP\IConfig;
 use OCP\IDBConnection;
 use OCP\Security\ICrypto;
-use OCP\UserPreferences\Exceptions\IncorrectTypeException;
-use OCP\UserPreferences\Exceptions\TypeConflictException;
-use OCP\UserPreferences\Exceptions\UnknownKeyException;
-use OCP\UserPreferences\IUserPreferences;
-use OCP\UserPreferences\ValueType;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -393,27 +394,11 @@ class UserPreferences implements IUserPreferences {
 	 * @param string $value preference value
 	 * @param bool $caseInsensitive non-case-sensitive search, only works if $value is a string
 	 *
-	 * @return list<string>
+	 * @return Generator<string>
 	 * @since 31.0.0
 	 */
-	public function searchUsersByValueString(string $app, string $key, string $value, bool $caseInsensitive = false): array {
+	public function searchUsersByValueString(string $app, string $key, string $value, bool $caseInsensitive = false): Generator {
 		return $this->searchUsersByTypedValue($app, $key, $value, $caseInsensitive);
-	}
-
-	/**
-	 * @inheritDoc
-	 *
-	 * @param string $app id of the app
-	 * @param string $key preference key
-	 * @param string $value preference value
-	 * @param bool $caseInsensitive non-case-sensitive search, only works if $value is a string
-	 * @internal
-	 * @deprecated since 31.0.0 - {@see }
-	 * @return list<string>
-	 * @since 31.0.0
-	 */
-	public function searchUsersByValueDeprecated(string $app, string $key, string $value, bool $caseInsensitive = false): array {
-		return $this->searchUsersByTypedValue($app, $key, $value, $caseInsensitive, true);
 	}
 
 	/**
@@ -423,10 +408,10 @@ class UserPreferences implements IUserPreferences {
 	 * @param string $key preference key
 	 * @param int $value preference value
 	 *
-	 * @return list<string>
+	 * @return Generator<string>
 	 * @since 31.0.0
 	 */
-	public function searchUsersByValueInt(string $app, string $key, int $value): array {
+	public function searchUsersByValueInt(string $app, string $key, int $value): Generator {
 		return $this->searchUsersByValueString($app, $key, (string)$value);
 	}
 
@@ -437,10 +422,10 @@ class UserPreferences implements IUserPreferences {
 	 * @param string $key preference key
 	 * @param array $values list of preference values
 	 *
-	 * @return list<string>
+	 * @return Generator<string>
 	 * @since 31.0.0
 	 */
-	public function searchUsersByValues(string $app, string $key, array $values): array {
+	public function searchUsersByValues(string $app, string $key, array $values): Generator {
 		return $this->searchUsersByTypedValue($app, $key, $values);
 	}
 
@@ -451,10 +436,10 @@ class UserPreferences implements IUserPreferences {
 	 * @param string $key preference key
 	 * @param bool $value preference value
 	 *
-	 * @return list<string>
+	 * @return Generator<string>
 	 * @since 31.0.0
 	 */
-	public function searchUsersByValueBool(string $app, string $key, bool $value): array {
+	public function searchUsersByValueBool(string $app, string $key, bool $value): Generator {
 		$values = ['0', 'off', 'false', 'no'];
 		if ($value) {
 			$values = ['1', 'on', 'true', 'yes'];
@@ -470,11 +455,10 @@ class UserPreferences implements IUserPreferences {
 	 * @param string $key
 	 * @param string|array $value
 	 * @param bool $caseInsensitive
-	 * @param bool $withinNotIndexedField DEPRECATED: should only be used to stay compatible with not-indexed/pre-31 preferences value
 	 *
-	 * @return list<string>
+	 * @return Generator<string>
 	 */
-	private function searchUsersByTypedValue(string $app, string $key, string|array $value, bool $caseInsensitive = false): array {
+	private function searchUsersByTypedValue(string $app, string $key, string|array $value, bool $caseInsensitive = false): Generator {
 		$this->assertParams('', $app, $key, allowEmptyUser: true);
 
 		$qb = $this->connection->getQueryBuilder();
@@ -515,15 +499,10 @@ class UserPreferences implements IUserPreferences {
 		}
 
 		$qb->andWhere($where);
-
-		$userIds = [];
 		$result = $qb->executeQuery();
-		$rows = $result->fetchAll();
-		foreach ($rows as $row) {
-			$userIds[] = $row['userid'];
+		while ($row = $result->fetch()) {
+			yield $row['userid'];
 		}
-
-		return $userIds;
 	}
 
 	/**
