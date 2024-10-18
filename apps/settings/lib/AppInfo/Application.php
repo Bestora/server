@@ -79,6 +79,7 @@ use OCP\AppFramework\Bootstrap\IBootContext;
 use OCP\AppFramework\Bootstrap\IBootstrap;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use OCP\AppFramework\IAppContainer;
+use OCP\AppFramework\QueryException;
 use OCP\Defaults;
 use OCP\Group\Events\GroupDeletedEvent;
 use OCP\Group\Events\UserAddedEvent;
@@ -219,7 +220,7 @@ class Application extends App implements IBootstrap {
 	 * @throws \InvalidArgumentException
 	 * @throws \BadMethodCallException
 	 * @throws \Exception
-	 * @throws \OCP\AppFramework\QueryException
+	 * @throws QueryException
 	 */
 	public function onChangePassword(array $parameters) {
 		/** @var Hooks $hooks */
@@ -232,7 +233,7 @@ class Application extends App implements IBootstrap {
 	 * @throws \InvalidArgumentException
 	 * @throws \BadMethodCallException
 	 * @throws \Exception
-	 * @throws \OCP\AppFramework\QueryException
+	 * @throws QueryException
 	 */
 	public function onChangeInfo(array $parameters) {
 		if ($parameters['feature'] !== 'eMailAddress') {
